@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files (large)
+data/raw/*.csv
+data/calibrated/*.csv
+*.npz
+
+# Models & params
+*.pkl
+*.joblib
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports (generated)
+reports/*.pdf
+reports/*.png
+
+# ESP32
+firmware/build/
+
+# PCB
+pcb/*.zip
+pcb/*.gbr
+pcb/*.drl
