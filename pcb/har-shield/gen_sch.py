@@ -5,6 +5,7 @@ def uid(): return str(uuid.uuid4())
 
 # ── Symbol library definitions (embedded, portable) ────────────────────
 def symbol_R(name):
+    uname = name.replace(":", "_")
     return f"""(symbol "{name}"
       (pin_names (offset 0) hide)
       (exclude_from_sim no)
@@ -14,7 +15,7 @@ def symbol_R(name):
       (property "Value" "R" (at 2.54 -1.27 0) (id 1))
       (property "Footprint" "" (at 0 0 0) (id 2))
       (property "Datasheet" "~" (at 0 0 0) (id 3))
-      (symbol "{name}_0_1"
+      (symbol "{uname}_0_1"
         (rectangle (start -2.54 -1.27) (end 2.54 1.27) (stroke (width 0.254) (type default)) (fill (type none)))
         (pin "1" line (at -5.08 0 0) (length 2.54) (name "1" (effects (font (size 1.27 1.27)))))
         (pin "2" line (at 5.08 0 0) (length 2.54) (name "2" (effects (font (size 1.27 1.27)))))
@@ -22,6 +23,7 @@ def symbol_R(name):
     )"""
 
 def symbol_C(name):
+    uname = name.replace(":", "_")
     return f"""(symbol "{name}"
       (pin_names (offset 0) hide)
       (exclude_from_sim no)
@@ -31,13 +33,14 @@ def symbol_C(name):
       (property "Value" "C" (at 0 -2.54 0) (id 1))
       (property "Footprint" "" (at 0 0 0) (id 2))
       (property "Datasheet" "~" (at 0 0 0) (id 3))
-      (symbol "{name}_0_1"
+      (symbol "{uname}_0_1"
         (pin "1" line (at -5.08 0 0) (length 2.54) (name "1" (effects (font (size 1.27 1.27)))))
         (pin "2" line (at 5.08 0 0) (length 2.54) (name "2" (effects (font (size 1.27 1.27)))))
       )
     )"""
 
 def symbol_LED(name):
+    uname = name.replace(":", "_")
     return f"""(symbol "{name}"
       (pin_names (offset 0) hide)
       (exclude_from_sim no)
@@ -47,7 +50,7 @@ def symbol_LED(name):
       (property "Value" "LED" (at 0 -2.54 0) (id 1))
       (property "Footprint" "" (at 0 0 0) (id 2))
       (property "Datasheet" "~" (at 0 0 0) (id 3))
-      (symbol "{name}_0_1"
+      (symbol "{uname}_0_1"
         (polyline (pts (xy -2.54 -1.27) (xy -2.54 1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
         (polyline (pts (xy -2.54 -1.27) (xy 2.54 0) (xy -2.54 1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
         (polyline (pts (xy 2.54 -1.27) (xy 2.54 1.27)) (stroke (width 0.254) (type default)) (fill (type none)))
@@ -60,6 +63,7 @@ def symbol_LED(name):
 
 def symbol_Conn_1xN(name, n):
     """Generate a 1xN female connector symbol."""
+    uname = name.replace(":", "_")
     pins = []
     top = (n - 1) * 1.27
     for i in range(n):
@@ -74,7 +78,7 @@ def symbol_Conn_1xN(name, n):
       (property "Value" "Conn_01x{n:02d}_Female" (at 0 {-top - 1.27:.2f} 0) (id 1))
       (property "Footprint" "" (at 0 0 0) (id 2))
       (property "Datasheet" "~" (at 0 0 0) (id 3))
-      (symbol "{name}_0_1"
+      (symbol "{uname}_0_1"
         (rectangle (start -1.27 {-top - 1.27:.2f}) (end 1.27 {top + 1.27:.2f}) (stroke (width 0.254) (type default)) (fill (type background)))
         {chr(10).join('        ' + p for p in pins)}
       )
