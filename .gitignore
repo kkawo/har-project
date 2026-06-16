@@ -41,3 +41,7 @@ firmware/build/
 pcb/*.zip
 pcb/*.gbr
 pcb/*.drl
+pcb/**/.history/
+
+# Delivery archives
+D*.zip

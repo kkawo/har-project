@@ -1,0 +1,105 @@
+{
+  "accelerometer": {
+    "bias": [
+      0.0009442493405448437,
+      -0.09470694547248092,
+      -0.4558949398858301
+    ],
+    "scale": [
+      -0.9976291509784209,
+      1.0079181450893038,
+      0.9813142826698706
+    ],
+    "misalignment": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "g_reference": 9.80665,
+    "method": "six_position_lstsq"
+  },
+  "magnetometer": {
+    "hard_iron": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "soft_iron": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "field_magnitude": 45.0,
+    "method": "placeholder"
+  },
+  "gyroscope": {
+    "bias": [
+      -4.286830400000011,
+      -1.2097468000000005,
+      0.6714640000000016
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "note": "Gyro bias estimated from static segment mean; turntable not available"
+  },
+  "noise_analysis": {
+    "accelerometer": {
+      "x": {
+        "angle_random_walk": 0.0018483027797982965,
+        "bias_instability": 0.0006790451304937178
+      },
+      "y": {
+        "angle_random_walk": 0.012066781149518091,
+        "bias_instability": 0.00111339762170097
+      },
+      "z": {
+        "angle_random_walk": 0.07944481247628463,
+        "bias_instability": 0.0008951060396606826
+      }
+    },
+    "gyroscope": {
+      "x": {
+        "angle_random_walk": 0.005257099250934477,
+        "bias_instability": 0.003483915285843605
+      },
+      "y": {
+        "angle_random_walk": 0.007939308053094596,
+        "bias_instability": 0.003393946768088848
+      },
+      "z": {
+        "angle_random_walk": 0.0619382246278287,
+        "bias_instability": 0.0015321040764832551
+      }
+    }
+  },
+  "calibration_date": "2026-06-17",
+  "operator": "李宝平",
+  "notes": "GY-521 (MPU6050) calibration. Accel: six-position LSTSQ. Gyro: static bias estimate. Positions collected: ['+Z_down', '-Z_up', '+X_down', '-X_up', '+Y_down', '-Y_up']. Mag: placeholder (GY-273 not yet available)."
+}
