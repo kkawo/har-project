@@ -1,0 +1,9 @@
+model,accuracy,macro_f1,fall_recall,type
+GaussianNB,0.9976442873969376,0.9979294979032415,1.0,standard
+LDA,0.25618374558303886,0.1907731643984202,0.5,standard
+LogisticRegression,1.0,1.0,1.0,standard
+Perceptron,1.0,1.0,1.0,standard
+LinearSVM,1.0,1.0,1.0,standard
+kNN_k5,1.0,1.0,1.0,standard
+MinRiskBayes_std,1.0,1.0,1.0,minrisk
+MinRiskBayes_fall,1.0,1.0,1.0,minrisk

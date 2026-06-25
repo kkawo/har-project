@@ -14,20 +14,22 @@
 
 ```
 ESP32-S3 N16R8
-  └── I²C 总线 (SDA=IO17, SCL=IO18, 面包板搭接, 3V3供电)
+  └── I²C 总线 (SDA=IO17, SCL=IO18, Shield PCB 焊接)
         ├── GY-521 (MPU6050: 3轴加速度 + 3轴陀螺仪) @ 0x68 [已标定]
-        └── GY-273 (HMC5883L: 3轴磁力计) @ 0x1E [待到货]
-  └── Shield 扩展板: KiCad 原理图已手动绘制, PCB 布局布线进行中
+        └── GY-273 (HMC5883L: 3轴磁力计) @ 0x1E [已重标定, 覆盖度 1.22uT]
+  └── Shield 扩展板: KiCad 原理图 → Gerber → 嘉立创 → 手工焊接完成
+  └── NeoPixel RGB LED @ GPIO48 (离线采集状态指示)
+  └── 焊有: R1/R2(4.7kΩ I²C上拉) + C1/C2(100nF去耦) + LED电源指示
 ```
 
-- 采样率 50Hz, 目标 9 通道 (ax, ay, az, gx, gy, gz, mx, my, mz)
+- 采样率 50Hz, 9 通道 (ax, ay, az, gx, gy, gz, mx, my, mz)
 - 传感器佩戴于腰部, Y轴指向前进方向
 
 ## 软件架构
 
 ```
-数据采集 → 预处理(去重力/滤波/窗口化) → 特征提取(时域+频域+跨轴 ~90维)
-  → 特征选择(Filter/Wrapper/PCA/LDA/t-SNE) → 分类器(5基线+7高级)
+数据采集 → 预处理(去重力/滤波/窗口化) → 特征提取(时域+频域+跨轴 294维)
+  → 特征选择(Filter/PCA/LDA/t-SNE) → 分类器(5基线+7高级)
   → LOSO评估 → 模型选择
 ```
 
@@ -35,62 +37,68 @@ ESP32-S3 N16R8
 
 | 文件 | 状态 | 职责 |
 |------|------|------|
-| `src/utils.py` | D1 | 常量(FS=50, WINDOW_SEC=2.56, ACTIVITIES, 轴列表) |
-| `src/preprocess.py` | D1 | 去重力、巴特沃斯滤波、滑动窗口(128点/50%重叠)、Pipeline |
-| `src/features.py` | D1 | 时域12维+频域8维/轴 + 合加速度 + 跨轴相关 → ~90维/窗口 |
-| `src/feature_selection.py` | D1 | 方差/ANOVA/MI筛选, PCA/LDA降维, t-SNE可视化 |
-| `src/classifiers_baseline.py` | D1 | 5种基线分类器 + MinimumRiskBayes(代价矩阵) |
-| `src/models_advanced.py` | D1 | 7种高级分类器 + PARAM_GRIDS |
-| `src/evaluation.py` | D1 | LOSO, k-fold, Bootstrap CI, McNemar检验, 混淆矩阵 |
-| `calib/calibrate.py` | D2 | 六位置加速度计标定, 椭球拟合磁力计, Allan方差, 对比图 |
-| `calib/process_mpu6050_calib.py` | D2 | 串口采集数据 → 标定参数 + 对比图 |
-| `calib/capture_mpu6050.py` | D2 | 串口自动采集脚本 (pySerial) |
-| `calib/generate_demo_data.py` | D2 | 合成demo数据生成 (无硬件时验证Pipeline) |
-| `calib/calib_params.json` | **D2 实测** | GY-521 标定参数 (bias/scale/gyro bias/Allan系数) |
-| `firmware/mpu6050_calib/main.py` | **D2 实测** | MicroPython 采集固件 (Thonny, REPL交互) |
-| `firmware/har_firmware.ino` | D2 | Arduino 固件 (备用, 支持 HMC5883L) |
-| `reports/标定报告.md` | **D2 实测** | 含方法、实测参数、Allan噪声、对比图 |
-| `reports/figures/` | D2 | 3张对比图 (accel_calib, allan_accel, allan_gyro) |
-| `D2/` | **D2 交付包** | 含 calib_params.json + 报告 + 图表 + raw/calibrated 数据集 |
-| `pcb/har-shield/` | D1-D2 | KiCad 10 项目 (用户手动绘制), PCB 布局进行中 |
+| `src/utils.py` | D1 | 常量(FS=50, WINDOW_SEC=2.56), RAW_DIR指向data/raw/real |
+| `src/preprocess.py` | **D3 完成** | 完整 Pipeline: 校准→裁剪→去重力→滤波→窗口化 (503行) |
+| `src/features.py` | **D4 完成** | 时域14+频域10/轴+模长+跨轴+复合=294维 (448行) |
+| `src/feature_selection.py` | **D5 完成** | Filter(ANOVA/MI/Ensemble) + Wrapper(SFS) + Embedded(RF/RFE/L1) + PCA/LDA/t-SNE (371行) |
+| `src/classifiers_baseline.py` | **D6 完成** | 6 基线 + MinimumRiskBayes + LOSO + 决策边界 (290行) |
+| `src/models_advanced.py` | **D7 完成** | 7 高级模型 + GridSearchCV + 学习曲线 + LOSO (250行) |
+| `src/evaluation.py` | **D8 完成** | LOSO + 混淆矩阵 + McNemar + Bootstrap CI + 标定增益分析 (380行) |
+| `calib/calib_params.json` | **D2 实测 + 重标定** | 三传感器完整标定参数 (磁力计覆盖度 1.22uT, 改善76.1%) |
+| `firmware/offline_logger/main.py` | **D3+** | 离线连续自动序列, I²C错误恢复, LED信号 (230行) |
+| `firmware/har9ch_firmware/main.py` | D3 | 在线 9ch MicroPython 固件 (REPL交互) |
+| `data/raw/real/S01-S02/` | **真实数据** | 2被试×7活动×1次 = 14 CSV, 566窗口 |
+| `data/raw/S01-S02-S03/` | D3 Demo | 原demo数据保留未覆盖 |
+| `firmware/offline_logger/test_run.py` | 调试用 | S01补录固件 (run→fall 4 trial) |
 
 ---
 
 # Progress
 
 ## Day 1 (2026-06-15)
-
 - 项目计划书 + 数据采集协议 + Git 仓库
 - Python 源码骨架 8 文件
 - KiCad 项目建立 + DESIGN.md + 原理图手动绘制
-- 10次 commit
 
 ## Day 2 (2026-06-17 实测)
+- **GY-521 六位置标定**: 16500样本, 7位置, RMSE 11.35→0.42 m/s²
+- **HMC5883L 椭球拟合标定**: 3026样本旋转采集, norm_std 7.44→4.78 uT
+- **calib_params.json**: 完整三传感器标定参数
+- **KiCad PCB**: 原理图手动绘制完成, Gerber 已导出, 嘉立创已下单
 
-### 已完成
+## Day 3 (2026-06-17 代码推进)
+- **9 通道 MicroPython 固件**: MPU6050(0x68) + HMC5883L(0x1E)
+- **离线自动序列固件**: NeoPixel LED 信号, trial 自动推进
+- **预处理 Pipeline**: 校准→裁剪→去重力→滤波→窗口化 (503行)
+- **Demo 数据集**: 42 CSV, 2被试, 真实物理模拟
 
-- **GY-521 六位置标定** (16500样本, 7位置): 加速度计 RMSE 11.35→0.42 m/s², 陀螺仪零偏已修正
-- **calib_params.json**: 实测参数 (bias=[0.0009, -0.0947, -0.4559], scale=[-0.9976, 1.0079, 0.9813], gyro bias=[-4.29, -1.21, 0.67])
-- **标定报告更新**: 含实测方法、参数表、Allan 噪声系数、3张对比图
-- **MicroPython 固件**: Thonny REPL 交互式采集 (`firmware/mpu6050_calib/main.py`)
-- **串口采集工具**: `capture_mpu6050.py` (pySerial 自动采集) + `process_mpu6050_calib.py` (解析→标定→出图)
-- **D2 交付包**: `D2/` 目录 (calib_params.json + 标定报告 + 对比图 + raw/calibrated 七位置数据集)
-- **ESP32 面包板接线**: 仅3根线 (3V3/GND → IO17/SDA, IO18/SCL), 固件验证 I²C 通信正常
+## Day 5-8 (2026-06-17)
+- D5: 特征选择 (Filter/Wrapper/Embedded + PCA/LDA/t-SNE)
+- D6: 6 基线分类器 + MinimumRiskBayes + LOSO + 决策边界
+- D7: 7 高级模型 + GridSearchCV + 学习曲线
+- D8: LOSO + 混淆矩阵 + McNemar + Bootstrap CI + 标定增益
+- 全部基于 demo 数据验证 (100% 精度, 合成数据特性)
 
-### 遇到的问题及解决
+## PCB 到货 + 硬件验证 (2026-06-24)
+- **PCB 焊接**: J1/J2/J3/J4 排母 + R1/R2/C1/C2/R3/D1 全部焊接
+- **I²C 排错**: 初始 SDA/SCL 焊锡桥接短路, 修复后空板扫描正常 ([])
+- **I²C 验证**: 0x68 (MPU6050) + 0x1E (HMC5883L) 稳定通信
+- **磁力计重标定**: 3000样本旋转采集, 标准差 4.78→1.22 uT, 改善 76.1%
+- **固件升级**: 连续自动序列(无需反复插拔) + I²C错误恢复(reinit + retry×3) + LED错误信号(红灯)
 
-| 问题 | 解决 |
-|------|------|
-| KiCad 10 S-expression 手动生成格式复杂 | 放弃代码生成, 用户保留原始手动绘制的原理图 |
-| Thonny Shell 缓冲区不够存 10 分钟数据 | 写 `capture_mpu6050.py` 用 pySerial 直接从 COM7 抓取 |
-| Windows GBK 终端不支持 Unicode (`²`, `µ`) | 批量替换为 ASCII 字符 (`^2`, `u`) |
-| GY-521 X 轴与六位置假设反向 (scale 为负) | 标定算法自动补偿, 不影响精度 |
-| 无硬件时需验证标定 Pipeline | `generate_demo_data.py` 生成合成数据跑通全流程 |
+## 真实数据采集 (2026-06-24)
+- **S01**: 7 trial (sit/stand/walk/run/upstairs/downstairs/fall), 283窗口, 无I²C错误
+- **S02**: 7 trial, 283窗口, 无I²C错误
+- 数据存储: `data/raw/real/S01/` `data/raw/real/S02/`, demo数据保留在 `data/raw/S01-S03/`
 
-### 未完成
-
-- **GY-273 (HMC5883L) 磁力计标定**: 模块已有, 待到货后补 (椭球拟合代码就绪)
-- **PCB 布局布线 + Gerber**: 原理图已手动绘制, 待 KiCad GUI 完成
+## 真实数据全链路重跑 (2026-06-24)
+- **预处理**: 566 窗口 (S01=283, S02=283)
+- **特征提取**: (566, 292) 特征矩阵 (2 常量特征自动过滤)
+- **特征选择**: RFE 最优 (30维, CV 91.7%), SFS 次之 (30维, 90.8%)
+- **基线分类器**: kNN 55.5% 最佳, LR 52.5% 次之, LDA 23.3% (高维失效)
+- **高级分类器**: kNN(k=3,distance) 56.4%, MLP(128,64) 50.7%, RF 42.4%
+- **评估**: McNemar检验kNN vs RBF_SVM显著(p<0.0001), Bootstrap 95%CI [51.2%, 59.4%]
+- **主要问题**: sit recall=0% (与stand/walk高度混淆), fall recall=38% (仅14窗口)
 
 ---
 
@@ -98,42 +106,24 @@ ESP32-S3 N16R8
 
 | # | 问题 | 严重度 | 状态 |
 |---|------|--------|------|
-| 1 | **GY-273 磁力计待标定** | 🟡 | 模块已有, 接线后补标 |
-| 2 | **PCB 布局布线未完成** | 🟡 | 原理图已手动绘制, 待 KiCad 操作 |
-| 3 | **S03 被试待定** | 🟢 | 可先用 S01/S02 |
-| 4 | **活动数据未采集** | 🟡 | 标定已完成, 数据采集是 D3 任务 |
+| 1 | **真实精度偏低 (55.5%)** | 🟡 | 566窗口/2被试, 样本量小, 正常现象 |
+| 2 | **sit 完全不可分 (recall=0%)** | 🟡 | 与 stand/walk 加速度特征接近, 需更多特征或时序建模 |
+| 3 | **跌倒样本极少 (14窗口)** | 🟡 | fall 仅 15s, 类不平衡严重 |
+| 4 | **LOSO 仅 2 folds** | 🟢 | 2 被试, 统计意义有限 |
+| 5 | **S03 被试未采集** | 🟢 | 可后续补充 |
+| 6 | **原有 demo 数据完好** | 🟢 | 在 data/raw/S01-S03/, 可随时切回对比 |
 
 ---
 
-# TODO
+# Quick Reference
 
-## D3 (下一步)
-
-- [ ] GY-273 到货后接线 + 椭球拟合磁力计标定 → 更新 calib_params.json (9通道)
-- [ ] 更新固件支持 9 通道 (MPU6050 + HMC5883L) → 烧录
-- [ ] 7类活动数据采集 (≥3次 × ≥60s × 2-3被试)
-- [ ] 预处理 Pipeline 验证 (去重力 + 滤波 + 窗口化)
-- [ ] 生成 raw/ 和 calibrated/ 活动数据集
-- [ ] commit + push
-
-## D4-D6
-
-- [ ] D4: 特征提取 + 特征矩阵 + 特征字典
-- [ ] D5: 特征选择对比 + 降维可视化
-- [ ] D6: 5种基线分类器 + 最小风险贝叶斯 + 决策边界
-
----
-
-# Handover Notes
-
-- **MicroPython 环境**: ESP32-S3 + Thonny, 固件在 `firmware/mpu6050_calib/main.py`
-- **固件用法**: 上传后 REPL 输入 `collect('<label>', seconds)`, 输出 CSV
-- **串口采集**: `python calib/capture_mpu6050.py COM7` (需先关 Thonny)
-- **标定处理**: `python calib/process_mpu6050_calib.py` (读取 raw_mpu6050_calib.txt → calib_params.json + 对比图)
-- **标定参数文件**: `calib/calib_params.json` (当前仅 GY-521, GY-273 placeholder)
-- **I²C 接线**: SDA=IO17, SCL=IO18, 模块自带 4.7kΩ 上拉 (GY-521 含 10kΩ)
-- **I²C 地址**: MPU6050=0x68 (AD0→GND), HMC5883L=0x1E
-- **六位置标定**: 模块 XYZ 标记可能与假设反向, scale 出现负值属正常 (算法自动补偿)
-- **PCB 原理图**: 用户手动绘制, 位于 `pcb/har-shield/har-shield.kicad_sch` (KiCad 10)
-- **D2 交付包**: `D2/` 目录可直接提交
-- **GitHub**: `git push origin main`
+- **Python 环境**: `pip install -r requirements.txt`
+- **真实数据路径**: `data/raw/real/S01/` `data/raw/real/S02/`
+- **RAW_DIR**: `src/utils.py` 已改为 `data/raw/real`
+- **标定参数**: `calib/calib_params.json` (磁力计覆盖度 1.22uT)
+- **I²C 接线**: SDA=IO17, SCL=IO18, Shield PCB 焊接
+- **I²C 地址**: MPU6050=0x68, HMC5883L=0x1E
+- **HMC5883L 寄存器顺序**: X, Z, Y (非标准)
+- **NeoPixel LED**: GPIO48
+- **离线固件**: `firmware/offline_logger/main.py` (连续自动序列 + I²C恢复)
+- **详细交接**: 见 HANDOVER.md

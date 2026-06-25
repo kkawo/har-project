@@ -1,0 +1,64 @@
+{
+  "best_model": "kNN_k5",
+  "best_accuracy": 0.5547703180212014,
+  "best_macro_f1": 0.5054631884477108,
+  "runner_up": "RBF_SVM",
+  "runner_up_accuracy": 0.4717314487632509,
+  "mcnemar_chi2": 19.063063063063062,
+  "mcnemar_p": 1.2646909171243337e-05,
+  "mcnemar_significant": "True",
+  "bootstrap_observed": 0.5547703180212014,
+  "bootstrap_ci_lower": 0.5123233215547703,
+  "bootstrap_ci_upper": 0.5936837455830388,
+  "per_class_recall": {
+    "sit": 0.0,
+    "stand": 0.6521739130434783,
+    "walk": 0.9565217391304348,
+    "run": 0.5434782608695652,
+    "upstairs": 0.8260869565217391,
+    "downstairs": 0.391304347826087,
+    "fall": 0.2857142857142857
+  },
+  "per_class_precision": {
+    "sit": 0.0,
+    "stand": 0.5607476635514018,
+    "walk": 0.676923076923077,
+    "run": 0.5617977528089888,
+    "upstairs": 0.672566371681416,
+    "downstairs": 0.5806451612903226,
+    "fall": 0.5714285714285714
+  },
+  "top_errors": [
+    {
+      "true": "sit",
+      "predicted": "stand",
+      "count": 45,
+      "reason": "准静态活动, 加速度幅值接近 1g, 角速度接近零"
+    },
+    {
+      "true": "run",
+      "predicted": "sit",
+      "count": 25,
+      "reason": "需进一步分析"
+    },
+    {
+      "true": "sit",
+      "predicted": "run",
+      "count": 23,
+      "reason": "需进一步分析"
+    },
+    {
+      "true": "downstairs",
+      "predicted": "sit",
+      "count": 23,
+      "reason": "需进一步分析"
+    },
+    {
+      "true": "sit",
+      "predicted": "downstairs",
+      "count": 21,
+      "reason": "需进一步分析"
+    }
+  ],
+  "calibration_status": "calibration_params_available"
+}

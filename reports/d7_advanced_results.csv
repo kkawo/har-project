@@ -1,0 +1,8 @@
+model,accuracy,macro_f1,best_params
+RBF_SVM,0.44876325088339225,0.38312300058672477,"[{'clf__C': 10, 'clf__gamma': 'scale'}, {'clf__C': 10, 'clf__gamma': 'scale'}]"
+kNN,0.5636042402826855,0.5273116605292693,"[{'clf__n_neighbors': 3, 'clf__weights': 'distance'}, {'clf__n_neighbors': 3, 'clf__weights': 'distance'}]"
+DecisionTree,0.3127208480565371,0.2527857331403845,"[{'clf__max_depth': 5, 'clf__min_samples_split': 2}, {'clf__max_depth': None, 'clf__min_samples_split': 5}]"
+RandomForest,0.42402826855123676,0.42110128995827933,"[{'clf__max_depth': None, 'clf__min_samples_split': 5, 'clf__n_estimators': 100}, {'clf__max_depth': None, 'clf__min_samples_split': 5, 'clf__n_estimators': 200}]"
+AdaBoost,0.21731448763250882,0.16852825464390694,"[{'clf__learning_rate': 0.5, 'clf__n_estimators': 100}, {'clf__learning_rate': 1.0, 'clf__n_estimators': 200}]"
+GBDT,0.28091872791519434,0.2615364596950399,"[{'clf__learning_rate': 0.1, 'clf__max_depth': 3, 'clf__n_estimators': 200}, {'clf__learning_rate': 0.1, 'clf__max_depth': 5, 'clf__n_estimators': 200}]"
+MLP,0.5070671378091873,0.4190292562420373,"[{'clf__alpha': 0.0001, 'clf__hidden_layer_sizes': (128, 64)}, {'clf__alpha': 0.001, 'clf__hidden_layer_sizes': (128, 64)}]"

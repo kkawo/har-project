@@ -2148,10 +2148,6 @@
 		(uuid "11f11979-965e-48da-bc42-fadd228476b8")
 	)
 	(no_connect
-		(at 156.21 59.69)
-		(uuid "1ccc5ea3-4aa5-4603-89d7-bc3c597603e9")
-	)
-	(no_connect
 		(at 114.3 41.91)
 		(uuid "1d4a3fa1-8c44-495b-a156-ad09e560a2a3")
 	)
@@ -2186,10 +2182,6 @@
 	(no_connect
 		(at 85.09 54.61)
 		(uuid "5006ad58-b815-4808-bc73-c829fc5fc32d")
-	)
-	(no_connect
-		(at 85.09 72.39)
-		(uuid "53d43534-2dd2-4112-a7ee-0d687be4119a")
 	)
 	(no_connect
 		(at 85.09 80.01)
@@ -2298,14 +2290,6 @@
 	(no_connect
 		(at 156.21 54.61)
 		(uuid "e2edc519-b08f-4869-8f06-e1b18fc9a04e")
-	)
-	(no_connect
-		(at 85.09 69.85)
-		(uuid "e3834cec-ac11-4318-ba7c-02c9659bb34e")
-	)
-	(no_connect
-		(at 156.21 87.63)
-		(uuid "e5f5bc02-1ecb-48f9-bcf1-0dd240ae1712")
 	)
 	(no_connect
 		(at 114.3 80.01)
@@ -2471,6 +2455,16 @@
 	)
 	(wire
 		(pts
+			(xy 148.59 59.69) (xy 156.21 59.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3c6b433b-a621-4b65-804c-ec943df8135a")
+	)
+	(wire
+		(pts
 			(xy 113.03 109.22) (xy 133.35 109.22)
 		)
 		(stroke
@@ -2611,6 +2605,16 @@
 	)
 	(wire
 		(pts
+			(xy 77.47 69.85) (xy 85.09 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7028016d-9219-4f95-ba88-0d6cd1ded9ab")
+	)
+	(wire
+		(pts
 			(xy 151.13 24.13) (xy 151.13 77.47)
 		)
 		(stroke
@@ -2638,6 +2642,16 @@
 			(type default)
 		)
 		(uuid "8717d309-a7b8-4be9-a50b-3196c9791cef")
+	)
+	(wire
+		(pts
+			(xy 76.2 72.39) (xy 85.09 72.39)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "88c5f091-2fb8-4b11-add9-7b0958753ad6")
 	)
 	(wire
 		(pts
@@ -2901,6 +2915,16 @@
 	)
 	(wire
 		(pts
+			(xy 147.32 87.63) (xy 156.21 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e4c206e3-e48e-4fcb-9944-152aeed67e50")
+	)
+	(wire
+		(pts
 			(xy 123.19 80.01) (xy 156.21 80.01)
 		)
 		(stroke
@@ -2908,6 +2932,46 @@
 			(type default)
 		)
 		(uuid "f5272d91-df19-4ff6-88ce-abed8b6486e7")
+	)
+	(label "MAG_DRDY"
+		(at 147.32 87.63 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "6bce2a77-a45e-4f59-b4b3-4d5800e0fefc")
+	)
+	(label "MPU_INT"
+		(at 148.59 59.69 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "c522e345-cfe1-4241-a5b7-7989d9c92f33")
+	)
+	(label "MPU_INT"
+		(at 77.47 69.85 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "cfc3ce9f-1c46-42a6-9cb0-b3f38a6c1d67")
+	)
+	(label "MAG_DRDY"
+		(at 76.2 72.39 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "df467199-edb8-49d8-a34e-ade4bfb32190")
 	)
 	(symbol
 		(lib_id "Device:C")
@@ -3163,7 +3227,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5624b798-08ad-4c41-a6a0-0d30d2601e8e")
-		(property "Reference" "J104"
+		(property "Reference" "J4"
 			(at 163.83 81.2799 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3185,7 +3249,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical"
 			(at 161.29 82.55 0)
 			(hide yes)
 			(show_name no)
@@ -3236,7 +3300,7 @@
 		(instances
 			(project "har-shield"
 				(path "/3ab08d95-1261-4d51-b5b6-6f7bc70db9bb"
-					(reference "J104")
+					(reference "J4")
 					(unit 1)
 				)
 			)
@@ -3418,7 +3482,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8eb3f128-c0cf-4605-b17d-4ca62a3bb1fb")
-		(property "Reference" "J103"
+		(property "Reference" "J3"
 			(at 163.83 49.5299 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3440,7 +3504,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x08_P2.54mm_Vertical"
 			(at 161.29 49.53 0)
 			(hide yes)
 			(show_name no)
@@ -3500,7 +3564,7 @@
 		(instances
 			(project "har-shield"
 				(path "/3ab08d95-1261-4d51-b5b6-6f7bc70db9bb"
-					(reference "J103")
+					(reference "J3")
 					(unit 1)
 				)
 			)
@@ -3713,7 +3777,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x22_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x22_P2.54mm_Vertical"
 			(at 109.22 59.69 0)
 			(hide yes)
 			(show_name no)
@@ -3855,7 +3919,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x22_P2.54mm_Vertical"
+		(property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_1x22_P2.54mm_Vertical"
 			(at 90.17 59.69 0)
 			(hide yes)
 			(show_name no)
@@ -3986,7 +4050,7 @@
 				)
 			)
 		)
-		(property "Value" "-3V3"
+		(property "Value" "3V3"
 			(at 54.61 21.59 0)
 			(show_name no)
 			(do_not_autoplace no)

@@ -1,0 +1,33 @@
+{
+  "best_model": "LinearSVM",
+  "best_accuracy": 1.0,
+  "best_macro_f1": 1.0,
+  "runner_up": "RBF_SVM",
+  "runner_up_accuracy": 1.0,
+  "mcnemar_chi2": 0,
+  "mcnemar_p": 1.0,
+  "mcnemar_significant": false,
+  "bootstrap_observed": 1.0,
+  "bootstrap_ci_lower": 1.0,
+  "bootstrap_ci_upper": 1.0,
+  "per_class_recall": {
+    "sit": 1.0,
+    "stand": 1.0,
+    "walk": 1.0,
+    "run": 1.0,
+    "upstairs": 1.0,
+    "downstairs": 1.0,
+    "fall": 1.0
+  },
+  "per_class_precision": {
+    "sit": 1.0,
+    "stand": 1.0,
+    "walk": 1.0,
+    "run": 1.0,
+    "upstairs": 1.0,
+    "downstairs": 1.0,
+    "fall": 1.0
+  },
+  "top_errors": [],
+  "calibration_status": "calibration_params_available"
+}

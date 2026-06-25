@@ -7,3 +7,5 @@ matplotlib>=3.7
 seaborn>=0.12
 allantools>=2019.9
 jupyter>=1.0
+hmmlearn>=0.3.0
+tensorflow>=2.13

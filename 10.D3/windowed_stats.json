@@ -1,0 +1,50 @@
+{
+  "total_windows": 1698,
+  "window_shape": [
+    1698,
+    128,
+    9
+  ],
+  "channels": [
+    "ax",
+    "ay",
+    "az",
+    "gx",
+    "gy",
+    "gz",
+    "mx",
+    "my",
+    "mz"
+  ],
+  "unique_labels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "unique_subjects": [
+    "S01",
+    "S02"
+  ],
+  "per_subject": {
+    "S01": {
+      "trials": 21,
+      "windows": 849
+    },
+    "S02": {
+      "trials": 21,
+      "windows": 849
+    }
+  },
+  "params": {
+    "fs": 50,
+    "window_samples": 128,
+    "overlap": 0.5,
+    "trim_sec": 2.0,
+    "gravity_cutoff_hz": 0.3,
+    "lp_cutoff_hz": 20.0
+  }
+}
