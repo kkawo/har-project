@@ -1,7 +1,7 @@
 {
-  "total_windows": 566,
+  "total_windows": 849,
   "window_shape": [
-    566,
+    849,
     128,
     9
   ],
@@ -35,6 +35,10 @@
       "windows": 283
     },
     "S02": {
+      "trials": 7,
+      "windows": 283
+    },
+    "S03": {
       "trials": 7,
       "windows": 283
     }
