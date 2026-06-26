@@ -68,4 +68,4 @@
 
 ---
 
-> 固件版本：D11 realtime_inference | 2026-06-25
+> 固件版本：D11 realtime_inference (6ch acc+gyro) | 2026-06-25

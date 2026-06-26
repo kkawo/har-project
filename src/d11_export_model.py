@@ -32,6 +32,10 @@ CALIB_PATH = ROOT / "calib" / "calib_params.json"
 OUT_DIR = ROOT / "firmware" / "realtime_inference"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
+# Use clean data only (first 566 rows — S01+S02 without NaN contamination)
+# The last 283 rows are from a corrupted S03 merge and contain NaN features
+CLEAN_ROWS = 566
+
 ACTIVITIES = {0: "sit", 1: "stand", 2: "walk", 3: "run",
               4: "upstairs", 5: "downstairs", 6: "fall"}
 CLASS_NAMES = [ACTIVITIES[i] for i in range(7)]
@@ -56,6 +60,27 @@ def select_non_fft_features(df):
     return non_fft
 
 
+# Exact time-domain feature names computed by ESP32 firmware
+TIME_STATS = [
+    "mean", "std", "var", "rms", "peak_to_peak", "max", "min",
+    "median", "skew", "kurtosis", "zero_cross_rate", "sma",
+    "iqr", "autocorr_lag1",
+]
+TIME_AXES = ["ax", "ay", "az", "gx", "gy", "gz"]  # 6ch only, no magnetometer
+
+
+def select_esp32_time_features(feat_names):
+    """Keep ONLY the 126 time-domain features computable on ESP32.
+    The firmware computes 14 time stats x 9 axes = 126 features.
+    No magnitudes, correlations, jerk, or ratios.
+    """
+    esp32_feats = [c for c in feat_names
+                   if any(c == f"{a}_{s}" for a in TIME_AXES for s in TIME_STATS)]
+    print(f"ESP32 time-only features: {len(esp32_feats)} "
+          f"(excluded: {len(feat_names) - len(esp32_feats)})")
+    return esp32_feats
+
+
 def train_and_eval(X, y, groups):
     """Train LR and report both LOSO and full-data accuracy."""
     model = Pipeline([
@@ -71,15 +96,19 @@ def train_and_eval(X, y, groups):
     full_f1 = f1_score(y, model.predict(X), average="macro")
 
     # LOSO (cross-subject generalization reference)
-    logo = LeaveOneGroupOut()
-    yt, yp = [], []
-    for train_idx, test_idx in logo.split(X, y, groups):
-        m = clone(model)
-        m.fit(X[train_idx], y[train_idx])
-        yp.extend(m.predict(X[test_idx]))
-        yt.extend(y[test_idx])
-    loso_acc = accuracy_score(yt, yp)
-    loso_f1 = f1_score(yt, yp, average="macro")
+    unique_groups = set(groups)
+    if len(unique_groups) >= 2:
+        logo = LeaveOneGroupOut()
+        yt, yp = [], []
+        for train_idx, test_idx in logo.split(X, y, groups):
+            m = clone(model)
+            m.fit(X[train_idx], y[train_idx])
+            yp.extend(m.predict(X[test_idx]))
+            yt.extend(y[test_idx])
+        loso_acc = accuracy_score(yt, yp)
+        loso_f1 = f1_score(yt, yp, average="macro")
+    else:
+        loso_acc, loso_f1 = 0.0, 0.0
 
     return model, loso_acc, loso_f1, full_acc, full_f1
 
@@ -113,8 +142,7 @@ def export_model(model, feature_names, calib_data, out_path):
     code = f'''# Auto-generated model for ESP32 real-time HAR inference.
 # Model: LogisticRegression (OVR)
 # Features: {len(feature_names)} non-FFT
-# Full-data acc: {accuracy_score(
-    np.zeros(1), np.zeros(1)):.4f}  # see report for actual
+# See export script output for accuracy metrics.
 
 N_CLASSES = {N_CLASSES}
 N_FEATURES = {len(feature_names)}
@@ -150,10 +178,29 @@ def main():
     print("=" * 60)
 
     df = pd.read_csv(FEAT_PATH)
+    # Use only clean rows (S01+S02 without NaN contamination from broken S03)
+    df = df.iloc[:CLEAN_ROWS].copy()
+    print(f"Using {len(df)} clean rows (S01+S02 only)")
+
+    # Replace median with mean, IQR with 1.349*std
+    # (matches MicroPython firmware which can't use sorted())
+    for axis in ['ax','ay','az','gx','gy','gz','mx','my','mz',
+                 'acc_mag','gyro_mag','mag_mag']:
+        med_col = f'{axis}_median'
+        iqr_col = f'{axis}_iqr'
+        mean_col = f'{axis}_mean'
+        std_col = f'{axis}_std'
+        if med_col in df.columns and mean_col in df.columns:
+            df[med_col] = df[mean_col]
+        if iqr_col in df.columns and std_col in df.columns:
+            df[iqr_col] = 1.349 * df[std_col]
+    print("Applied median/IQR approximations (sorted-free)")
+
     y = df["label"].values.astype(int)
     groups = df["subject_id"].values
 
     feat_cols = select_non_fft_features(df)
+    feat_cols = select_esp32_time_features(feat_cols)  # Keep only 126 ESP32-computable
     X = df[feat_cols].values.astype(np.float64)
 
     if np.any(np.isnan(X)):
@@ -168,9 +215,12 @@ def main():
 
     model, loso_acc, loso_f1, full_acc, full_f1 = train_and_eval(X, y, groups)
 
-    print(f"LogisticRegression (184 non-FFT features, C=1.0):")
-    print(f"  Full-data (demo scenario): acc={full_acc:.4f}, f1={full_f1:.4f}")
-    print(f"  LOSO 3-fold:              acc={loso_acc:.4f}, f1={loso_f1:.4f}")
+    print(f"LogisticRegression (84 time-domain features, C=1.0):")
+    print(f"  Full-data (self-demo): acc={full_acc:.4f}, f1={full_f1:.4f}")
+    if loso_acc > 0:
+        print(f"  LOSO: acc={loso_acc:.4f}, f1={loso_f1:.4f}")
+    else:
+        print(f"  LOSO: N/A (single subject)")
     print(f"\n  Full-data per-class:")
     print(classification_report(y, model.predict(X),
           target_names=CLASS_NAMES, zero_division=0))

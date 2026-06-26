@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>活动识别展示系统 — HAR Dashboard</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 顶部标题栏 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<header class="top-bar">
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 6v6l4 2"/>
+    </svg>
+    <span>活动识别展示系统</span>
+    <span class="subtitle">Activity Recognition Presentation System</span>
+  </div>
+  <div class="status-bar">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">演示模式</span>
+    <span class="clock" id="clock"></span>
+  </div>
+</header>
+
+<div class="app-container">
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 左侧导航栏 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="avatar">
+    <svg viewBox="0 0 64 64" width="56" height="56">
+      <circle cx="32" cy="32" r="31" fill="#e8f0fe" stroke="#1a73e8" stroke-width="2"/>
+      <circle cx="32" cy="24" r="10" fill="#1a73e8"/>
+      <ellipse cx="32" cy="52" rx="18" ry="12" fill="#1a73e8"/>
+    </svg>
+    <p class="user-label">HAR 系统</p>
+  </div>
+
+  <nav class="nav-buttons">
+    <div class="ip-input-group">
+      <input type="text" id="esp32IP" placeholder="ESP32 IP 地址" class="ip-input">
+    </div>
+    <button class="nav-btn" id="btnConnect" onclick="toggleHardware()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="6" width="20" height="12" rx="2"/>
+        <circle cx="12" cy="12" r="2"/>
+        <path d="M6 12h-4M22 12h-4"/>
+      </svg>
+      <span>连接硬件</span>
+      <span class="btn-sub">Connect Hardware</span>
+    </button>
+
+    <button class="nav-btn active" id="btnSession" onclick="toggleSession()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="5,3 19,12 5,21 5,3"/>
+      </svg>
+      <span>开始会话</span>
+      <span class="btn-sub">Start Session</span>
+    </button>
+
+    <button class="nav-btn" id="btnReport" onclick="generateReport()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14,2 14,8 20,8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      <span>生成报告</span>
+      <span class="btn-sub">Generate Report</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="model-badge" id="modelBadge">
+      <span class="badge-dot"></span>
+      <span>LR · 184特征</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- 主内容区 -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<main class="main-content">
+
+  <!-- ── 上方左: 实时活动检测 ── -->
+  <section class="card activity-panel" id="activityPanel">
+    <div class="card-header">
+      <h2>📡 实时活动检测</h2>
+      <span class="card-badge live">LIVE</span>
+    </div>
+    <div class="activity-cards" id="activityCards">
+      <!-- JS 动态生成 -->
+    </div>
+    <div class="current-activity" id="currentActivity">
+      <span class="activity-name">--</span>
+      <span class="confidence">等待数据...</span>
+    </div>
+  </section>
+
+  <!-- ── 上方右: 传感器状态分布 ── -->
+  <section class="card sensor-panel" id="sensorPanel">
+    <div class="card-header">
+      <h2>📍 传感器状态分布</h2>
+      <span class="card-badge ok">在线</span>
+    </div>
+    <div class="sensor-body-container">
+      <svg viewBox="0 0 200 320" class="body-svg" id="bodySvg">
+        <!-- 头部 -->
+        <circle cx="100" cy="28" r="18" fill="none" stroke="#64748b" stroke-width="2.5"/>
+        <!-- 脖子 -->
+        <line x1="100" y1="46" x2="100" y2="58" stroke="#64748b" stroke-width="2.5"/>
+        <!-- 肩膀 -->
+        <line x1="55" y1="58" x2="145" y2="58" stroke="#64748b" stroke-width="2.5"/>
+        <!-- 躯干 -->
+        <line x1="100" y1="58" x2="100" y2="180" stroke="#64748b" stroke-width="2.5"/>
+        <!-- 左臂 -->
+        <line x1="55" y1="58" x2="35" y2="130" stroke="#64748b" stroke-width="2.5"/>
+        <!-- 右臂 -->
+        <line x1="145" y1="58" x2="165" y2="130" stroke="#64748b" stroke-width="2.5"/>
+        <!-- 左腿 -->
+        <line x1="100" y1="180" x2="70" y2="290" stroke="#64748b" stroke-width="2.5"/>
+        <!-- 右腿 -->
+        <line x1="100" y1="180" x2="130" y2="290" stroke="#64748b" stroke-width="2.5"/>
+
+        <!-- 胸部传感器 (IMU) -->
+        <g id="sensorChest">
+          <rect x="88" y="90" width="24" height="24" rx="4" fill="#00c853" stroke="#00a844" stroke-width="1.5"/>
+          <text x="100" y="106" text-anchor="middle" fill="white" font-size="11" font-weight="bold">IMU</text>
+          <!-- 无线电波 -->
+          <path d="M112,95 Q118,85 112,75" fill="none" stroke="#00c853" stroke-width="1.5" opacity="0.8">
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+          </path>
+          <path d="M116,92 Q124,78 116,66" fill="none" stroke="#00c853" stroke-width="1.5" opacity="0.6">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+          </path>
+          <text x="138" y="98" fill="#64748b" font-size="9">胸部 (IMU)</text>
+        </g>
+
+        <!-- 大腿传感器 (IMU) -->
+        <g id="sensorThigh">
+          <rect x="88" y="210" width="24" height="24" rx="4" fill="#00c853" stroke="#00a844" stroke-width="1.5"/>
+          <text x="100" y="226" text-anchor="middle" fill="white" font-size="11" font-weight="bold">IMU</text>
+          <path d="M112,215 Q118,205 112,195" fill="none" stroke="#00c853" stroke-width="1.5" opacity="0.8">
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite"/>
+          </path>
+          <path d="M116,212 Q124,198 116,186" fill="none" stroke="#00c853" stroke-width="1.5" opacity="0.6">
+            <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+          </path>
+          <text x="138" y="218" fill="#64748b" font-size="9">大腿 (IMU)</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ── 下方左: 数据流与诊断 ── -->
+  <section class="card streams-panel">
+    <div class="card-header">
+      <h2>📈 数据流与诊断</h2>
+      <span class="card-badge stream">50 Hz</span>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">加速度计 X · Y · Z</div>
+      <canvas id="accChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">陀螺仪 X · Y · Z</div>
+      <canvas id="gyroChart"></canvas>
+    </div>
+  </section>
+
+  <!-- ── 下方右: 模型状态与日志 ── -->
+  <section class="card model-panel">
+    <div class="card-header">
+      <h2>🤖 模型状态与日志</h2>
+      <label class="toggle">
+        <input type="checkbox" id="logToggle" checked onchange="toggleLog()">
+        <span class="toggle-slider"></span>
+        <span class="toggle-label">日志窗口</span>
+      </label>
+    </div>
+    <div class="model-info">
+      <div class="info-row">
+        <span class="info-label">模型:</span>
+        <span class="info-value" id="modelName">逻辑回归 (LR)</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">特征数:</span>
+        <span class="info-value" id="modelFeats">184 维</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">传感器:</span>
+        <span class="info-value" id="modelSensors">加速度计 + 陀螺仪</span>
+      </div>
+    </div>
+    <div class="log-console" id="logConsole">
+      <div class="log-line">> 系统就绪 — 等待数据...</div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script src="/static/dashboard.js"></script>
+</body>
+</html>

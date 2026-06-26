@@ -9,7 +9,7 @@ from pathlib import Path
 # Project root
 ROOT = Path(__file__).parent.parent
 DATA_DIR = ROOT / "data"
-RAW_DIR = DATA_DIR / "raw" / "real"
+RAW_DIR = DATA_DIR / "raw" / "real2"
 CALIB_DIR = DATA_DIR / "calibrated"
 REPORTS_DIR = ROOT / "reports"
 CALIB_PARAMS = ROOT / "calib" / "calib_params.json"

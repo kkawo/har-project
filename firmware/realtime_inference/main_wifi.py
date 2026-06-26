@@ -30,8 +30,7 @@ _test_d = _test_i2c.readfrom_mem(0x68, 0x3B, 14)
 _test_az = struct.unpack(">h", bytes(_test_d[4:6]))[0]
 print(f"EARLY ACCEL_Z: {_test_az}")
 
-# import network  # REMOVED: breaks I2C on this board!
-import socket, neopixel, struct, math, gc, time
+import network, socket, neopixel, struct, math, gc, time
 
 # ═══════════════════════════════════════════════════════════════════
 # Hardware
@@ -44,14 +43,31 @@ GRAVITY = 9.80665
 i2c = None  # Created in init_mpu()
 
 # ═══════════════════════════════════════════════════════════════════
-# WiFi STA — 连接手机热点
+# WiFi STA — connect to phone hotspot
 # ═══════════════════════════════════════════════════════════════════
-WIFI_SSID = "gg"         # ← 改成手机热点名
-WIFI_PASS = "88888888"     # ← 改成手机热点密码
+WIFI_SSID = "YOUR_HOTSPOT_NAME"     # ← CHANGE to your phone hotspot name
+WIFI_PASS = "YOUR_HOTSPOT_PASSWORD" # ← CHANGE to your phone hotspot password
+ESP32_IP = "0.0.0.0"     # Set after WiFi connects
 
-# ── WiFi disabled for testing ──
-ESP32_IP = "0.0.0.0"
-print("WiFi SKIPPED — serial mode only")
+
+def wifi_connect():
+    """Connect to WiFi hotspot. Returns True on success."""
+    global ESP32_IP
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    print(f"WiFi connecting to {WIFI_SSID}...")
+    np[0] = (40, 40, 0); np.write()  # Yellow = connecting
+    wlan.connect(WIFI_SSID, WIFI_PASS)
+    for _ in range(30):  # 15 second timeout
+        if wlan.isconnected():
+            ESP32_IP = wlan.ifconfig()[0]
+            print(f"WiFi OK! IP: {ESP32_IP}")
+            np[0] = (0, 40, 0); np.write()  # Green = connected
+            return True
+        time.sleep_ms(500)
+    print("WiFi FAILED")
+    np[0] = (40, 0, 0); np.write()  # Red = failed
+    return False
 
 # ═══════════════════════════════════════════════════════════════════
 # Sensor ring buffer (MUST be defined before HTTP functions)
@@ -463,12 +479,16 @@ def main():
             np[0] = (0, 0, 0); np.write(); time.sleep_ms(100)
         return  # Halt — watchdog will reboot
 
-    # ── Stage 2: HTTP server (skip if WiFi disabled) ──
-    np[0] = (0, 10, 10); np.write()  # Cyan = init HTTP
-    if ESP32_IP != "0.0.0.0":
+    # ── Stage 2: Connect WiFi ──
+    np[0] = (40, 40, 0); np.write()  # Yellow = connecting
+    wifi_ok = wifi_connect()
+
+    # ── Stage 3: HTTP server ──
+    if wifi_ok:
+        np[0] = (0, 10, 10); np.write()  # Cyan = init HTTP
         http_init()
     else:
-        print("HTTP SKIPPED — WiFi disabled (serial mode)")
+        print("WiFi failed — HTTP disabled")
 
     # Flash white x3 = ready
     np[0] = (0, 0, 0); np.write(); time.sleep_ms(300)
@@ -533,11 +553,12 @@ def main():
                 show_led(smooth_cid, conf)
 
                 t_sec = samples / 50.0
-                name = ACT_ZH.get(smooth_cid, '?')
+                name_en = ACTIVITIES.get(smooth_cid, 'unknown')
+                name_zh = ACT_ZH.get(smooth_cid, '?')
                 mark = " *** FALL ***" if smooth_cid == 6 else ""
-                raw_name = ACT_ZH.get(cid, '?')
-                raw2_name = ACT_ZH.get(cid2, '?')
-                print(f"[{t_sec:5.1f}s] #{infer_count} {name} | raw={raw_name}({conf:.2f}) vs {raw2_name}({conf2:.2f}){mark}")
+                print(f"[{t_sec:5.1f}s] #{infer_count} {name_en} {name_zh} conf={conf:.3f}{mark}")
+                # JSON data line for dashboard parsing
+                print('DATA:{"id":%d,"zh":"%s","en":"%s","conf":%.3f}' % (smooth_cid, name_zh, name_en, conf))
             except Exception as e:
                 print(f"INFER ERR #{infer_count}: {e}")
                 np[0] = (255, 0, 0); np.write(); time.sleep_ms(100)
